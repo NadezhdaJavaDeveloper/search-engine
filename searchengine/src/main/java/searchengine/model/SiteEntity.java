@@ -38,8 +38,8 @@ public class SiteEntity {
 
     //один сайт может иметь много лемм,
     // mappedBy = "site" = названию параметра в классе LemmaEntity
-//    @OneToMany(mappedBy = "site", fetch = FetchType.LAZY)
-//    private List<LemmaEntity> lemmaList;
+    @OneToMany(mappedBy = "site", fetch = FetchType.LAZY)
+    private List<LemmaEntity> lemmaList;
 
     @OneToMany(mappedBy = "site", fetch = FetchType.LAZY)
     private List<PageEntity> pageEntities;

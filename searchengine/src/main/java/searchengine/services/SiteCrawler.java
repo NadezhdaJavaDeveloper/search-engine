@@ -13,6 +13,7 @@ import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RecursiveAction;
 
@@ -33,18 +34,18 @@ public class SiteCrawler extends RecursiveAction {
     }
 
     private static Connection.Response response = null;
-    private static HashSet<String> linksList = new HashSet<>();
+    private static Set<String> linksList = ConcurrentHashMap.newKeySet();
 
     @Override
     protected void compute() {
-        linksList.add(rootLink);
+
         List<SiteCrawler> taskList = new ArrayList<>();
         try {
             Document doc = null;
             response = Jsoup.connect(rootLink)
                     .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
                     .referrer("http://www.google.com")
-                    .timeout(3000)
+                    .timeout(5000)
                     .execute();
             doc = response.parse();
             int statusCode = response.statusCode();
@@ -59,9 +60,11 @@ public class SiteCrawler extends RecursiveAction {
             for (Element line : lines) {
                 String underLink = line.attr("abs:href");
                 if (!linksList.contains(underLink) && underLink.startsWith(rootLink) && !underLink.contains("#")) {
+
                     SiteCrawler task = new SiteCrawler(underLink, currentSiteEntity, siteRepository, pageRepository, latchThreads);
                     task.fork();
                     taskList.add(task);
+                    linksList.add(underLink);
                 }
             }
             for (SiteCrawler task : taskList) {

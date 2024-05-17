@@ -6,4 +6,8 @@ public interface IndexService {
 
     StartAndStopIndexingResponse startIndexing();
     StartAndStopIndexingResponse stopIndexing();
+
+
+
+    StartAndStopIndexingResponse indexPage(String url);
 }

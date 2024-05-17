@@ -19,7 +19,7 @@ public class PageEntity {
     @JoinColumn(name = "site_id")
     private SiteEntity site;
 
-    @Column(name = "path", columnDefinition = "VARCHAR(255)")
+    @Column(name = "path", columnDefinition = "VARCHAR(255)", nullable = false)
     private String path;
 
     @Column(name = "code")
@@ -28,6 +28,6 @@ public class PageEntity {
     @Column(name = "content", columnDefinition = "MEDIUMTEXT")
     private String content;
 
-//    @OneToMany(mappedBy = "pageId", fetch = FetchType.LAZY)
-//    private List<IndexEntity> indexEntityList;
+    @OneToMany(mappedBy = "pageId", fetch = FetchType.LAZY)
+    private List<IndexEntity> indexEntityList;
 }

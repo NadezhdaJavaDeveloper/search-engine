@@ -8,6 +8,7 @@ import searchengine.config.SitesList;
 import searchengine.dto.statistics.StartAndStopIndexingResponse;
 import searchengine.exaptions.CrawlingOfPagesFailed;
 import searchengine.model.IndexingStatus;
+import searchengine.model.PageEntity;
 import searchengine.model.SiteEntity;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,11 +33,15 @@ public class IndexServiceImpl implements IndexService {
     private static StartAndStopIndexingResponse indexingResponse;
     private volatile boolean isIndexingGoing;
 
+
+
     public StartAndStopIndexingResponse startIndexing() {
 
         List<Site> sitesList = sites.getSites();
 
         for (Site site : sitesList) {
+
+            isIndexingGoing = true;
 
             String rootLink = site.getUrl();
             String siteName = site.getName();
@@ -47,13 +53,7 @@ public class IndexServiceImpl implements IndexService {
                 pageRepository.deleteBySite(siteEntity.get());
                 siteRepository.delete(siteEntity.get());
             }
-            SiteEntity currentSiteEntity = new SiteEntity();
-            currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXING);
-            isIndexingGoing = true;
-            currentSiteEntity.setUrl(rootLink);
-            currentSiteEntity.setName(siteName);
-            currentSiteEntity.setStatusTime(LocalDateTime.now());
-            currentSiteEntity.setErrorText(null);
+            SiteEntity currentSiteEntity = createSiteEntity(rootLink, siteName);
 
             siteRepository.save(currentSiteEntity);
 
@@ -94,13 +94,6 @@ public class IndexServiceImpl implements IndexService {
 
         }
 
-//        long countIndexingSites = siteRepository.findAll()
-//                .stream()
-//                .map(SiteEntity::getIndexingStatus)
-//                .filter(indexingStatus -> indexingStatus.equals(IndexingStatus.INDEXING)).count();
-//        if (countIndexingSites > 0) {
-//            isIndexingGoing = true;
-//        }
         return indexingResponse;
     }
 
@@ -117,6 +110,70 @@ public class IndexServiceImpl implements IndexService {
         return indexingResponse;
 
     }
+
+    @Override
+    public StartAndStopIndexingResponse indexPage(String url) {
+
+        List<Site> sitesList = sites.getSites();
+
+        if(isPageBelongsToExistingListOfSites(url).isBlank()) {
+            indexingResponse = new StartAndStopIndexingResponse();
+            indexingResponse.setResult(false);
+            indexingResponse.setError("Данная страница находится за пределами сайтов,указанных в конфигурационном файле");
+            return indexingResponse;
+        }
+
+        String siteUrl = isPageBelongsToExistingListOfSites(url);
+        Optional<SiteEntity> siteEntity = siteRepository.findByUrl(siteUrl);
+
+        if(siteEntity.isEmpty()) {
+            List<Site> currentSite = sitesList.stream().filter(site -> site.getUrl().equals(siteUrl)).toList();
+            String siteName = currentSite.get(0).getName();
+            SiteEntity currentSiteEntity = createSiteEntity(siteUrl, siteName);
+            siteRepository.save(currentSiteEntity);
+        }
+
+     //   PageEntity currentPageEntity = createPageEntity(siteEntity, url, )
+
+
+
+
+
+
+        return null;
+    }
+
+    private String isPageBelongsToExistingListOfSites (String url) {
+
+        List<Site> sitesList = sites.getSites();
+
+        for(Site site : sitesList) {
+            String siteUrl = site.getUrl();
+            if(url.startsWith(siteUrl)) return siteUrl;
+        }
+
+        return "";
+    }
+
+    private SiteEntity createSiteEntity(String rootLink, String siteName) {
+        SiteEntity currentSiteEntity = new SiteEntity();
+        currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXING);
+        currentSiteEntity.setUrl(rootLink);
+        currentSiteEntity.setName(siteName);
+        currentSiteEntity.setStatusTime(LocalDateTime.now());
+        currentSiteEntity.setErrorText(null);
+        return currentSiteEntity;
+    }
+
+    private PageEntity createPageEntity(SiteEntity siteEntity, String path, int httpResponse, String content) {
+        PageEntity newPageEntity = new PageEntity();
+        newPageEntity.setSite(siteEntity);
+        newPageEntity.setPath(path);
+        newPageEntity.setCode(httpResponse);
+        newPageEntity.setContent(content);
+        return newPageEntity;
+    }
+
 
 }
 
