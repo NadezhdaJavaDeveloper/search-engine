@@ -1,5 +1,6 @@
 package searchengine.services;
 
+import searchengine.config.Page;
 import searchengine.dto.statistics.StartAndStopIndexingResponse;
 
 public interface IndexService {
@@ -9,5 +10,5 @@ public interface IndexService {
 
 
 
-    StartAndStopIndexingResponse indexPage(String url);
+    StartAndStopIndexingResponse indexPage(Page page);
 }

@@ -28,6 +28,6 @@ public class PageEntity {
     @Column(name = "content", columnDefinition = "MEDIUMTEXT")
     private String content;
 
-    @OneToMany(mappedBy = "pageId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "page", fetch = FetchType.LAZY)
     private List<IndexEntity> indexEntityList;
 }

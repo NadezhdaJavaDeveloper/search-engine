@@ -14,4 +14,9 @@ public class StartAndStopIndexingResponse {
         error = null;
     }
 
+    public StartAndStopIndexingResponse(boolean result, String error) {
+        this.result = result;
+        this.error = error;
+    }
+
 }

@@ -19,7 +19,7 @@ public class LemmaEntity {
 
 
     //@JoinColumn(name = "site_id" - название стобца в БД
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
     private SiteEntity site;
 
@@ -29,7 +29,7 @@ public class LemmaEntity {
     @Column(name = "frequency", nullable = false)
     private Integer frequency;
 
-    @OneToMany(mappedBy = "lemmaId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "lemma", fetch = FetchType.LAZY)
     private List<IndexEntity> indexEntityList;
 
 }
