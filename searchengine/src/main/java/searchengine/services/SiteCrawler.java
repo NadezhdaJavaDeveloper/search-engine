@@ -13,10 +13,8 @@ import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RecursiveAction;
@@ -54,18 +52,16 @@ public class SiteCrawler extends RecursiveAction {
             int statusCode = response.statusCode();
 
             if (statusCode < 400) {
-                PageEntity newPageEntity = createPageEntity(currentSiteEntity, rootLink, statusCode, doc.toString());
-
+                PageEntity currentPageEntity = createPageEntity(currentSiteEntity, rootLink, statusCode, doc.toString());
                 synchronized (pageRepository) {
-                    pageRepository.save(newPageEntity);
+                    pageRepository.save(currentPageEntity);
                 }
+
+                FillingDatabaseLemmaIndex fillingDatabaseLemmaIndex = new FillingDatabaseLemmaIndex(lemmaRepository, indexRepository);
+                fillingDatabaseLemmaIndex.createLemmaAndIndex(currentPageEntity, currentSiteEntity);
+
                 currentSiteEntity.setStatusTime(LocalDateTime.now());
                 siteRepository.save(currentSiteEntity);
-
-
-                FillingDatabasePageLemmaIndex fillingDatabasePageLemmaIndex = new FillingDatabasePageLemmaIndex(lemmaRepository, indexRepository);
-                fillingDatabasePageLemmaIndex.createLemmaAndIndex(newPageEntity, currentSiteEntity);
-
 
             }
 
@@ -74,10 +70,10 @@ public class SiteCrawler extends RecursiveAction {
                 String underLink = line.attr("abs:href");
                 if (!linksList.contains(underLink) && underLink.startsWith(rootLink) && !underLink.contains("#")) {
                     linksList.add(underLink);
-                    SiteCrawler task = new SiteCrawler(underLink, currentSiteEntity, siteRepository, pageRepository, latchThreads, lemmaRepository, indexRepository);
+                    SiteCrawler task = new SiteCrawler(underLink, currentSiteEntity, siteRepository, pageRepository,
+                            latchThreads, lemmaRepository, indexRepository);
                     task.fork();
                     taskList.add(task);
-
                 }
             }
             for (SiteCrawler task : taskList) {
@@ -88,6 +84,7 @@ public class SiteCrawler extends RecursiveAction {
 
         } catch (Exception e) {
             currentSiteEntity.setIndexingStatus(IndexingStatus.FAILED);
+            currentSiteEntity.setErrorText(e.getMessage());
             siteRepository.save(currentSiteEntity);
             e.printStackTrace();
         }

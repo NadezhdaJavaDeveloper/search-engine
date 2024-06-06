@@ -10,7 +10,6 @@ import searchengine.config.Page;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.dto.statistics.StartAndStopIndexingResponse;
-import searchengine.exaptions.CrawlingOfPagesFailed;
 import searchengine.model.*;
 import searchengine.repository.*;
 
@@ -52,9 +51,9 @@ public class IndexServiceImpl implements IndexService {
             String rootLink = site.getUrl();
             String siteName = site.getName();
 
-            Optional<SiteEntity> siteEntity = siteRepository.findByName(siteName);
+            Optional<SiteEntity> siteEntityFromDB = siteRepository.findByName(siteName);
 
-            if (siteEntity.isPresent()) clearingDatabase(siteEntity.get());
+            if (siteEntityFromDB.isPresent()) clearingDatabase(siteEntityFromDB.get());
 
             SiteEntity currentSiteEntity = createSiteEntity(rootLink, siteName);
 
@@ -71,7 +70,7 @@ public class IndexServiceImpl implements IndexService {
 
             try {
                 latchThreads.await();
-                siteRepository.save(currentSiteEntity);
+               // siteRepository.save(currentSiteEntity); - видимо ненужный этап
 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -79,8 +78,8 @@ public class IndexServiceImpl implements IndexService {
 
             if (currentSiteEntity.getIndexingStatus().equals(IndexingStatus.FAILED)) {
 
-                currentSiteEntity.setErrorText(new CrawlingOfPagesFailed().getMessage());
-                siteRepository.save(currentSiteEntity);
+              //  currentSiteEntity.setErrorText(new CrawlingOfPagesFailed().getMessage());
+             //   siteRepository.save(currentSiteEntity);
                 indexingResponse = new StartAndStopIndexingResponse(false, currentSiteEntity.getErrorText());
 
             } else if (!forkJoinPool.isShutdown()) {
@@ -113,7 +112,6 @@ public class IndexServiceImpl implements IndexService {
     public StartAndStopIndexingResponse indexPage(Page page) {
 
         String url = page.getUrl();
-
 
         if (isPageBelongsToExistingListOfSites(url).isEmpty()) {
             indexingResponse = new StartAndStopIndexingResponse();
@@ -159,9 +157,9 @@ public class IndexServiceImpl implements IndexService {
             }
             pageRepository.save(pageEntity);
 
-            FillingDatabasePageLemmaIndex fillingDatabasePageLemmaIndex = new FillingDatabasePageLemmaIndex(lemmaRepository, indexRepository);
+            FillingDatabaseLemmaIndex fillingDatabaseLemmaIndex = new FillingDatabaseLemmaIndex(lemmaRepository, indexRepository);
 
-            fillingDatabasePageLemmaIndex.createLemmaAndIndex(pageEntity, currentSiteEntity);
+            fillingDatabaseLemmaIndex.createLemmaAndIndex(pageEntity, currentSiteEntity);
 
             indexingResponse = new StartAndStopIndexingResponse();
             currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXED);
