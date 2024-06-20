@@ -10,6 +10,8 @@ import searchengine.services.IndexService;
 import searchengine.services.IndexServiceImpl;
 import searchengine.services.StatisticsService;
 
+import java.util.concurrent.ExecutionException;
+
 @RestController
 @RequestMapping("/api")
 public class ApiController {
@@ -24,7 +26,7 @@ public class ApiController {
 
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<StartAndStopIndexingResponse> startIndexing() {
+    public ResponseEntity<StartAndStopIndexingResponse> startIndexing() throws ExecutionException, InterruptedException {
 
         return new ResponseEntity<>(indexService.startIndexing(), HttpStatus.OK);
     }

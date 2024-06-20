@@ -10,7 +10,9 @@ import searchengine.model.SiteEntity;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -69,10 +71,30 @@ public class FillingDatabaseLemmaIndex {
 
     }
     private HashMap<String, Integer> getListLemmaOnPage(String content) throws IOException {
+//
+//        PrintWriter writer1;
+//        try {
+//            writer1 = new PrintWriter("data/contentBefor.txt");
+//            writer1.write(content);
+//            writer1.flush();
+//            writer1.close();
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
 
         ConvertingWordIntoLemma converter = ConvertingWordIntoLemma.getInstance();
 
         String convertedText = converter.removingHtmlTags(content);
+
+//        PrintWriter writer;
+//        try {
+//            writer = new PrintWriter("data/contentAFter.txt");
+//            writer.write(convertedText);
+//            writer.flush();
+//            writer.close();
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
 
         return converter.creatingListOfLemmas(convertedText);
     }

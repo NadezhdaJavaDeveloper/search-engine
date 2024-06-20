@@ -7,12 +7,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.nodes.Document;
+import org.springframework.dao.DataIntegrityViolationException;
 import searchengine.model.*;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -41,28 +43,25 @@ public class SiteCrawler extends RecursiveAction {
 
         List<SiteCrawler> taskList = new ArrayList<>();
         try {
-            Connection.Response response = Jsoup.connect(rootLink)
-                    .ignoreHttpErrors(true)
-                    .followRedirects(false)
-                    .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
-                    .referrer("http://www.google.com")
-                    .timeout(5000)
-                    .execute();
+            Connection.Response response = connectingToLink(rootLink);
+
             Document doc = response.parse();
             int statusCode = response.statusCode();
 
             if (statusCode < 400) {
                 PageEntity currentPageEntity = createPageEntity(currentSiteEntity, rootLink, statusCode, doc.toString());
-                synchronized (pageRepository) {
+
+                try {
                     pageRepository.save(currentPageEntity);
+                    FillingDatabaseLemmaIndex fillingDatabaseLemmaIndex = new FillingDatabaseLemmaIndex(lemmaRepository, indexRepository);
+                    fillingDatabaseLemmaIndex.createLemmaAndIndex(currentPageEntity, currentSiteEntity);
+
+                    currentSiteEntity.setStatusTime(LocalDateTime.now());
+                    siteRepository.save(currentSiteEntity);
+                } catch (DataIntegrityViolationException ex) {
+                    //перехват дубликатов страниц
+                    ex.printStackTrace();
                 }
-
-                FillingDatabaseLemmaIndex fillingDatabaseLemmaIndex = new FillingDatabaseLemmaIndex(lemmaRepository, indexRepository);
-                fillingDatabaseLemmaIndex.createLemmaAndIndex(currentPageEntity, currentSiteEntity);
-
-                currentSiteEntity.setStatusTime(LocalDateTime.now());
-                siteRepository.save(currentSiteEntity);
-
             }
 
             Elements lines = doc.select("a");
@@ -79,23 +78,32 @@ public class SiteCrawler extends RecursiveAction {
             for (SiteCrawler task : taskList) {
                 task.join();
             }
-
             latchThreads.countDown();
-
         } catch (Exception e) {
             currentSiteEntity.setIndexingStatus(IndexingStatus.FAILED);
-            currentSiteEntity.setErrorText(e.getMessage());
             siteRepository.save(currentSiteEntity);
-            e.printStackTrace();
         }
     }
 
-    private PageEntity createPageEntity(SiteEntity siteEntity, String path, int httpResponse, String content) {
+    public static Connection.Response connectingToLink(String link) throws IOException {
+        return Jsoup.connect(link)
+                .ignoreHttpErrors(true)
+                .followRedirects(false)
+                .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+                .referrer("http://www.google.com")
+                .timeout(5000)
+                .execute();
+    }
+
+    public static PageEntity createPageEntity(SiteEntity siteEntity, String path, int httpResponse, String content) {
         PageEntity newPageEntity = new PageEntity();
+
         newPageEntity.setSite(siteEntity);
         newPageEntity.setPath(path);
         newPageEntity.setCode(httpResponse);
         newPageEntity.setContent(content);
+
+
         return newPageEntity;
     }
 

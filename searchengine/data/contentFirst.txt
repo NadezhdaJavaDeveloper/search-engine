@@ -1,0 +1,6 @@
+<html>
+ <head></head>
+ <body>
+  <a href="/books/">Permanent Redirect</a>.
+ </body>
+</html>

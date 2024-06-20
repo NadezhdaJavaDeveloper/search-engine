@@ -1,13 +1,23 @@
 package searchengine.dto.statistics;
 
 public class ErrorResponse {
-    private final String message;
+    private final boolean result;
+    private final String error;
 
-    public ErrorResponse(String message) {
-        this.message = message;
+
+
+
+
+    public ErrorResponse(String error) {
+        this.result = false;
+        this.error = error;
+
     }
 
-    public String getMessage() {
-        return message;
+    public String getError() {
+        return error;
+    }
+    public boolean isResult() {
+        return result;
     }
 }

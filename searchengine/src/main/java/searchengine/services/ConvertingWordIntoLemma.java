@@ -12,7 +12,7 @@ import java.util.Locale;
 public class ConvertingWordIntoLemma {
 
     private final LuceneMorphology luceneMorphology;
-    private static final String WORD_TYPE_REGEX = "\\W\\w&&[^а-яА-яЁё\\s]";
+    private static final String WORD_TYPE_REGEX = "[^а-яА-яЁё\\s]";
     private static final String[] particlesNames = new String[]{"МЕЖД", "ПРЕДЛ", "СОЮЗ"};
 
     public static ConvertingWordIntoLemma getInstance() throws IOException {
@@ -29,6 +29,7 @@ public class ConvertingWordIntoLemma {
     }
 
     public HashMap<String, Integer> creatingListOfLemmas (String originalText) {
+
         String[] words = splitTextBySpace(originalText);
         HashMap<String, Integer> lemma2count = new HashMap<>();
 
