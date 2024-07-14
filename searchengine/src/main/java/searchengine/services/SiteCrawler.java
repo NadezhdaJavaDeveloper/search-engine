@@ -14,7 +14,10 @@ import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -44,13 +47,10 @@ public class SiteCrawler extends RecursiveAction {
         List<SiteCrawler> taskList = new ArrayList<>();
         try {
             Connection.Response response = connectingToLink(rootLink);
-
             Document doc = response.parse();
             int statusCode = response.statusCode();
-
             if (statusCode < 400) {
                 PageEntity currentPageEntity = createPageEntity(currentSiteEntity, rootLink, statusCode, doc.toString());
-
                 try {
                     pageRepository.save(currentPageEntity);
                     FillingDatabaseLemmaIndex fillingDatabaseLemmaIndex = new FillingDatabaseLemmaIndex(lemmaRepository, indexRepository);
@@ -63,7 +63,6 @@ public class SiteCrawler extends RecursiveAction {
                     ex.printStackTrace();
                 }
             }
-
             Elements lines = doc.select("a");
             for (Element line : lines) {
                 String underLink = line.attr("abs:href");
@@ -80,8 +79,13 @@ public class SiteCrawler extends RecursiveAction {
             }
             latchThreads.countDown();
         } catch (Exception e) {
+
+            StringWriter errors = new StringWriter();
+            e.printStackTrace(new PrintWriter(errors));
+            currentSiteEntity.setErrorText(errors.toString());
             currentSiteEntity.setIndexingStatus(IndexingStatus.FAILED);
             siteRepository.save(currentSiteEntity);
+
         }
     }
 

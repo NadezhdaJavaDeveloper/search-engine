@@ -41,7 +41,7 @@ public class SiteEntity {
     @OneToMany(mappedBy = "site", fetch = FetchType.LAZY)
     private List<LemmaEntity> lemmaList;
 
-    @OneToMany(mappedBy = "site", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "site", fetch = FetchType.EAGER)
     private List<PageEntity> pageEntities;
 
 
