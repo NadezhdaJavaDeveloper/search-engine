@@ -1,4 +1,5 @@
 package searchengine.model;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import javax.persistence.*;
@@ -10,6 +11,7 @@ import java.util.List;
 //@Table(name = "page", uniqueConstraints = {@UniqueConstraint(columnNames = {"site, path"})})
 @Getter
 @Setter
+@EqualsAndHashCode
 public class PageEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

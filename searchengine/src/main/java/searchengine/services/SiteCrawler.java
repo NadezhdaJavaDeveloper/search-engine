@@ -2,12 +2,14 @@ package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.GenericJDBCException;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.nodes.Document;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import searchengine.model.*;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
@@ -43,7 +45,6 @@ public class SiteCrawler extends RecursiveAction {
 
     @Override
     protected void compute() {
-
         List<SiteCrawler> taskList = new ArrayList<>();
         try {
             Connection.Response response = connectingToLink(rootLink);
@@ -63,26 +64,31 @@ public class SiteCrawler extends RecursiveAction {
                     ex.printStackTrace();
                 }
             }
-            Elements lines = doc.select("a");
-            for (Element line : lines) {
-                String underLink = line.attr("abs:href");
-                if (!linksList.contains(underLink) && underLink.startsWith(rootLink) && !underLink.contains("#")) {
-                    linksList.add(underLink);
-                    SiteCrawler task = new SiteCrawler(underLink, currentSiteEntity, siteRepository, pageRepository,
-                            latchThreads, lemmaRepository, indexRepository);
-                    task.fork();
-                    taskList.add(task);
+            try {
+                Elements lines = doc.select("a");
+                for (Element line : lines) {
+                    String underLink = line.attr("abs:href");
+                    if (!linksList.contains(underLink) && underLink.startsWith(rootLink) && !underLink.contains("#")) {
+                        linksList.add(underLink);
+                        SiteCrawler task = new SiteCrawler(underLink, currentSiteEntity, siteRepository, pageRepository,
+                                latchThreads, lemmaRepository, indexRepository);
+                        task.fork();
+                        taskList.add(task);
+                    }
                 }
-            }
             for (SiteCrawler task : taskList) {
                 task.join();
             }
+            } catch (JpaSystemException | GenericJDBCException exception) {
+                exception.printStackTrace();
+            }
+
             latchThreads.countDown();
         } catch (Exception e) {
-
             StringWriter errors = new StringWriter();
             e.printStackTrace(new PrintWriter(errors));
             currentSiteEntity.setErrorText(errors.toString());
+            String pageWithMistake = rootLink;
             currentSiteEntity.setIndexingStatus(IndexingStatus.FAILED);
             siteRepository.save(currentSiteEntity);
 

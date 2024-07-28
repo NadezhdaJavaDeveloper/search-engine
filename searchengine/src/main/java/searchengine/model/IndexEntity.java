@@ -1,5 +1,6 @@
 package searchengine.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import javax.persistence.*;
 @Table(name = "indexes")
 @Getter
 @Setter
+@EqualsAndHashCode
 public class IndexEntity {
 
     @Id

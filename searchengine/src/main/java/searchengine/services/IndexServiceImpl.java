@@ -3,13 +3,12 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 import searchengine.config.Page;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
-import searchengine.dto.statistics.StartAndStopIndexingResponse;
+import searchengine.dto.statistics.IndexingResponse;
 import searchengine.exaptions.CrawlingOfPagesFailed;
 import searchengine.exaptions.ForcedStopOfIndexing;
 import searchengine.exaptions.InconsistencyWithConfigurationFile;
@@ -17,9 +16,7 @@ import searchengine.exaptions.UntimelyCommand;
 import searchengine.model.*;
 import searchengine.repository.*;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,15 +34,15 @@ public class IndexServiceImpl implements IndexService {
     private final IndexRepository indexRepository;
     private static final int COUNT_TREADS = 8;
     private static ForkJoinPool forkJoinPool;
-    private static StartAndStopIndexingResponse indexingResponse;
+    private static IndexingResponse indexingResponse;
     private volatile boolean isIndexingGoing;
     private List<Site> sitesList;
 
-    public StartAndStopIndexingResponse startIndexing() throws ExecutionException, InterruptedException {
+    public IndexingResponse startIndexing() throws ExecutionException, InterruptedException {
         if (isIndexingGoing) {throw new UntimelyCommand("Индексация уже запущена");}
         sitesList = sites.getSites();
         ExecutorService service = Executors.newFixedThreadPool(sitesList.size());
-        Future<StartAndStopIndexingResponse> future = null;
+        Future<IndexingResponse> future = null;
             for (Site site : sitesList) {
                 future = service.submit(() -> {
                     isIndexingGoing = true;
@@ -75,7 +72,7 @@ public class IndexServiceImpl implements IndexService {
                     } else {
                         currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXED);
                         siteRepository.save(currentSiteEntity);
-                        indexingResponse = new StartAndStopIndexingResponse();
+                        indexingResponse = new IndexingResponse();
                     }
                     isIndexingGoing = false;
                     return indexingResponse;
@@ -85,12 +82,12 @@ public class IndexServiceImpl implements IndexService {
     }
 
 
-    public StartAndStopIndexingResponse stopIndexing() {
+    public IndexingResponse stopIndexing() {
 
 
         if (isIndexingGoing) {
             forkJoinPool.shutdownNow();
-            indexingResponse = new StartAndStopIndexingResponse();
+            indexingResponse = new IndexingResponse();
         } else {
             throw new UntimelyCommand("Индексация не запущена");
         }
@@ -99,7 +96,7 @@ public class IndexServiceImpl implements IndexService {
     }
 
     @Override
-    public StartAndStopIndexingResponse indexPage(Page page) {
+    public IndexingResponse indexPage(Page page) {
 
         String url = page.getUrl();
 
@@ -145,7 +142,7 @@ public class IndexServiceImpl implements IndexService {
 
             fillingDatabaseLemmaIndex.createLemmaAndIndex(pageEntity, currentSiteEntity);
 
-            indexingResponse = new StartAndStopIndexingResponse();
+            indexingResponse = new IndexingResponse();
             currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXED);
 
             siteRepository.save(currentSiteEntity);

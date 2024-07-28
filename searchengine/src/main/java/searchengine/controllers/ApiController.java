@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import searchengine.config.Page;
-import searchengine.dto.statistics.StartAndStopIndexingResponse;
+import searchengine.dto.statistics.IndexingResponse;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.IndexService;
 import searchengine.services.IndexServiceImpl;
@@ -26,20 +26,20 @@ public class ApiController {
 
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<StartAndStopIndexingResponse> startIndexing() throws ExecutionException, InterruptedException {
+    public ResponseEntity<IndexingResponse> startIndexing() throws ExecutionException, InterruptedException {
 
         return new ResponseEntity<>(indexService.startIndexing(), HttpStatus.OK);
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<StartAndStopIndexingResponse> indexPage(@RequestBody Page page) {
+    public ResponseEntity<IndexingResponse> indexPage(@RequestBody Page page) {
         return new ResponseEntity<>(indexService.indexPage(page), HttpStatus.OK);
 
 
     }
 
     @GetMapping("/stopIndexing")
-    public ResponseEntity<StartAndStopIndexingResponse> stopIndexing() {
+    public ResponseEntity<IndexingResponse> stopIndexing() {
 
         return new ResponseEntity<>(indexService.stopIndexing(), HttpStatus.OK);
     }

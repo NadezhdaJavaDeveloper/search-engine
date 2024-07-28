@@ -1,4 +1,4 @@
-package searchengine.dto.statistics;
+package searchengine.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -1,13 +1,13 @@
 package searchengine.services;
 
 import searchengine.config.Page;
-import searchengine.dto.statistics.StartAndStopIndexingResponse;
+import searchengine.dto.statistics.IndexingResponse;
 
 import java.util.concurrent.ExecutionException;
 
 public interface IndexService {
 
-    StartAndStopIndexingResponse startIndexing() throws ExecutionException, InterruptedException;
-    StartAndStopIndexingResponse stopIndexing();
-    StartAndStopIndexingResponse indexPage(Page page);
+    IndexingResponse startIndexing() throws ExecutionException, InterruptedException;
+    IndexingResponse stopIndexing();
+    IndexingResponse indexPage(Page page);
 }
