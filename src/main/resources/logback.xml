@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="STDERR_FILE"
+              class="ch.qos.logback.core.FileAppender">
+        <file>logs/stderr.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %line - %msg%n</pattern>
+
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+<!--    <appender name="STDOUT"-->
+<!--              class="ch.qos.logback.core.ConsoleAppender">-->
+<!--        <encoder>-->
+<!--            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+<!--            <level>DEBUG</level>-->
+<!--            <onMatch>ACCEPT</onMatch>-->
+<!--            <onMissmatch>DENY</onMissmatch>-->
+<!--        </filter>-->
+<!--    </appender>-->
+    <root level="debug">
+        <appender-ref ref="STDERR_FILE" level="error" />
+<!--        <appender-ref ref="STDOUT" level="debug" />-->
+    </root>
+</configuration>
