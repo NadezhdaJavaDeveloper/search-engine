@@ -67,7 +67,7 @@
 2) создайте в MySQL-сервере пустую базу данных search_engine;
 3) клонируйте код приложения из репозитория командой:
 ```
-git clone <https://github.com/....>
+git clone <https://github.com/Nadya568/Diplom/tree/main>
 ```
 4) откройте проект с помощью IntelliJ IDEA;
 5) в конфигурационном файле `application.yaml` заполните параметы подключения к базе данных:

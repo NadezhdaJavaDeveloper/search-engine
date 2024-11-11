@@ -1808,3 +1808,17 @@ Identify and stop the process that's listening on port 8080 or configure this ap
 2024-11-09 23:09:55.380 [ForkJoinPool-1-worker-4] ERROR o.h.e.jdbc.spi.SqlExceptionHelper.logExceptions 142 - Duplicate entry '2-https://www.playback.ru' for key 'page.UKdxpfpwp57ynw2y9nds1e4u38f'
 2024-11-09 23:29:16.966 [ForkJoinPool-1-worker-5] ERROR o.h.e.jdbc.spi.SqlExceptionHelper.logExceptions 142 - Duplicate entry '1-https://ipfran.ru' for key 'page.UKdxpfpwp57ynw2y9nds1e4u38f'
 2024-11-10 16:45:54.803 [http-nio-8081-exec-2] ERROR searchengine.services.SiteCrawler.indexPage 127 - org.springframework.orm.ObjectOptimisticLockingFailureException: Batch update returned unexpected row count from update [0]; actual row count: 0; expected: 1; statement executed: delete from indexes where id=?; nested exception is org.hibernate.StaleStateException: Batch update returned unexpected row count from update [0]; actual row count: 0; expected: 1; statement executed: delete from indexes where id=?
+2024-11-11 20:30:29.261 [main] ERROR o.s.b.d.LoggingFailureAnalysisReporter.report 40 - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+

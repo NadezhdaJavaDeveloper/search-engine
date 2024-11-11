@@ -19,6 +19,7 @@ import searchengine.repository.*;
 
 import java.io.IOException;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 import java.time.LocalDateTime;
@@ -39,7 +40,7 @@ public class IndexServiceImpl implements IndexService {
     private final LemmaRepository lemmaRepository;
     private final IndexRepository indexRepository;
     private ForkJoinPool forkJoinPool = new ForkJoinPool();
-    private static IndexingResponse indexingResponse;
+    private IndexingResponse indexingResponse;
     private static final AtomicBoolean stopFlag = new AtomicBoolean(true);
     private static final Logger logger = LoggerFactory.getLogger(SiteCrawler.class);
 
@@ -73,11 +74,11 @@ public class IndexServiceImpl implements IndexService {
     public IndexingResponse stopIndexing() {
         if (!stopFlag.get()) {
             stopFlag.set(true);
-            indexingResponse = new IndexingResponse();
+            //   indexingResponse = new IndexingResponse();
         } else {
             throw new UntimelyCommand("Индексация не запущена");
         }
-        return indexingResponse;
+        return new IndexingResponse();
     }
 
     @Override
@@ -95,18 +96,12 @@ public class IndexServiceImpl implements IndexService {
         }
         SiteEntity currentSiteEntity = siteRepository.findByName(siteName).get();
         currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXING);
-
         try {
             Optional<PageEntity> pageEntityFromDB = pageRepository.findByPathAndSiteId(path, currentSiteEntity.getId());
             PageEntity pageEntity;
             if (pageEntityFromDB.isPresent()) {
                 pageEntity = pageEntityFromDB.get();
-                List<Integer> lemmaIdList = indexRepository.findByPageId(pageEntity.getId());
-                indexRepository.deleteByPageId(pageEntity.getId());
-                List<LemmaEntity> lemmaList = lemmaRepository.findAllById(lemmaIdList);
-                for (LemmaEntity lemma : lemmaList) {
-                    clearingDatabaseLemma(lemma);
-                }
+                deletePageData(pageEntity);
             } else {
                 pageEntity = createPageEntity(currentSiteEntity, path);
                 pageRepository.save(pageEntity);
@@ -130,9 +125,18 @@ public class IndexServiceImpl implements IndexService {
             currentSiteEntity.setStatusTime(LocalDateTime.now());
             siteRepository.save(currentSiteEntity);
         }
-        indexingResponse = new IndexingResponse();
-        return indexingResponse;
+        return new IndexingResponse();
     }
+
+    private void deletePageData(PageEntity pageEntity) {
+        List<Integer> lemmaIdList = indexRepository.findByPageId(pageEntity.getId());
+        indexRepository.deleteByPageId(pageEntity.getId());
+        List<LemmaEntity> lemmaList = lemmaRepository.findAllById(lemmaIdList);
+        for (LemmaEntity lemma : lemmaList) {
+            clearingDatabaseLemma(lemma);
+        }
+    }
+
 
     private void clearingDatabase(SiteEntity siteEntity) {
 
