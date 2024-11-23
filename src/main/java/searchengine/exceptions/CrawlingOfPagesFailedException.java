@@ -1,9 +1,9 @@
-package searchengine.exaptions;
+package searchengine.exceptions;
 
-public class CrawlingOfPagesFailed extends RuntimeException{
+public class CrawlingOfPagesFailedException extends RuntimeException{
 
     //Не удалось выполнить сканирование всех страниц, содержащихся на указанном сайте
-    public CrawlingOfPagesFailed(String error) {
+    public CrawlingOfPagesFailedException(String error) {
         super(error);
     }
 }

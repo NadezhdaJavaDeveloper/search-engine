@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.dto.statistics.SearchResponse;
 import searchengine.dto.statistics.SearchResult;
-import searchengine.exaptions.UntimelyCommand;
+import searchengine.exceptions.UntimelyCommandException;
 import searchengine.model.LemmaEntity;
 import searchengine.model.SiteEntity;
 import searchengine.repository.IndexRepository;
@@ -39,7 +39,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public SearchResponse getSearchResults(String userQuery, List<Site> siteList, int offset, int limit) {
 
-        if (userQuery.isBlank()) throw new UntimelyCommand("Задан пустой поисковый запрос");
+        if (userQuery.isBlank()) throw new UntimelyCommandException("Задан пустой поисковый запрос");
 
         List<SiteEntity> siteEntityList = getSiteEntityList(siteList);
 
@@ -112,7 +112,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if (query2frequency.isEmpty()) {
-            throw new UntimelyCommand("Попробуйте сформулировать запрос иначе");
+            throw new UntimelyCommandException("Попробуйте сформулировать запрос иначе");
         }
 
         int averageValueFrequency = getAverageValueFrequency(query2frequency);
@@ -315,10 +315,10 @@ public class SearchServiceImpl implements SearchService {
         TreeMap<String, Integer> word2index = new TreeMap<>();
 
         for (String snippetKeyword : snippetKeyWords) {
-            //if (convertedText.contains(snippetKeyword)) {
+
                 convertedText = convertedText.replaceAll(snippetKeyword, OPENING_TAG + snippetKeyword + CLOSING_TAG);
                 word2index.put(snippetKeyword, convertedText.indexOf(snippetKeyword));
-           // }
+
         }
 
         Map<String, Integer> sortedSnippetKeywords = word2index.entrySet().stream()

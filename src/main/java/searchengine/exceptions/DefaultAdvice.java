@@ -1,4 +1,4 @@
-package searchengine.exaptions;
+package searchengine.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +9,8 @@ import searchengine.dto.statistics.ErrorResponse;
 @ControllerAdvice
 public class DefaultAdvice {
 
-    @ExceptionHandler({CrawlingOfPagesFailed.class, ForcedStopOfIndexing.class,
-            UntimelyCommand.class, InconsistencyWithConfigurationFile.class})
+    @ExceptionHandler({CrawlingOfPagesFailedException.class, ForcedStopOfIndexingException.class,
+            UntimelyCommandException.class, InconsistencyWithConfigurationFileException.class})
     public ResponseEntity<ErrorResponse> handlerException(Exception exception) {
         ErrorResponse response = new ErrorResponse(exception.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);

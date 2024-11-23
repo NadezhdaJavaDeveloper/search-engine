@@ -1,11 +1,11 @@
-package searchengine.exaptions;
+package searchengine.exceptions;
 
-public class InconsistencyWithConfigurationFile extends RuntimeException{
+public class InconsistencyWithConfigurationFileException extends RuntimeException{
 
 
     //Данная страница находится за пределами сайтов,указанных в конфигурационном файле
 
-    public InconsistencyWithConfigurationFile(String error) {
+    public InconsistencyWithConfigurationFileException(String error) {
         super(error);
     }
 }

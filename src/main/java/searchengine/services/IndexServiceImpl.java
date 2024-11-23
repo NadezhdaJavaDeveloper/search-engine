@@ -6,20 +6,18 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.dto.statistics.IndexingResponse;
-import searchengine.exaptions.CrawlingOfPagesFailed;
-import searchengine.exaptions.ForcedStopOfIndexing;
-import searchengine.exaptions.InconsistencyWithConfigurationFile;
-import searchengine.exaptions.UntimelyCommand;
+import searchengine.exceptions.CrawlingOfPagesFailedException;
+import searchengine.exceptions.ForcedStopOfIndexingException;
+import searchengine.exceptions.InconsistencyWithConfigurationFileException;
+import searchengine.exceptions.UntimelyCommandException;
 import searchengine.model.*;
 import searchengine.repository.*;
 
 import java.io.IOException;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 import java.time.LocalDateTime;
@@ -40,9 +38,8 @@ public class IndexServiceImpl implements IndexService {
     private final LemmaRepository lemmaRepository;
     private final IndexRepository indexRepository;
     private ForkJoinPool forkJoinPool = new ForkJoinPool();
-    private IndexingResponse indexingResponse;
     private static final AtomicBoolean stopFlag = new AtomicBoolean(true);
-    private static final Logger logger = LoggerFactory.getLogger(SiteCrawler.class);
+    private static final Logger logger = LoggerFactory.getLogger(IndexServiceImpl.class);
 
     public static boolean isStopFlag() {
         return stopFlag.get();
@@ -51,7 +48,7 @@ public class IndexServiceImpl implements IndexService {
     public IndexingResponse startIndexing() {
 
         if (!isStopFlag()) {
-            throw new UntimelyCommand("Индексация уже запущена");
+            throw new UntimelyCommandException("Индексация уже запущена");
         } else {
             stopFlag.set(false);
         }
@@ -60,7 +57,7 @@ public class IndexServiceImpl implements IndexService {
             String rootLink = site.getUrl();
             String siteName = site.getName();
             Optional<SiteEntity> siteEntityFromDB = siteRepository.findByName(siteName);
-            siteEntityFromDB.ifPresent(this::clearingDatabase);
+            siteEntityFromDB.ifPresent(this::clearDatabase);
             SiteEntity currentSiteEntity = createSiteEntity(rootLink, siteName);
             siteRepository.save(currentSiteEntity);
             boolean isRootLink = true;
@@ -74,9 +71,8 @@ public class IndexServiceImpl implements IndexService {
     public IndexingResponse stopIndexing() {
         if (!stopFlag.get()) {
             stopFlag.set(true);
-            //   indexingResponse = new IndexingResponse();
         } else {
-            throw new UntimelyCommand("Индексация не запущена");
+            throw new UntimelyCommandException("Индексация не запущена");
         }
         return new IndexingResponse();
     }
@@ -85,7 +81,7 @@ public class IndexServiceImpl implements IndexService {
     public IndexingResponse indexPage(String introducedPath) {
         String path = URLDecoder.decode(introducedPath);
         if (isPageBelongsToExistingListOfSites(path).isEmpty()) {
-            throw new InconsistencyWithConfigurationFile("Данная страница находится за пределами сайтов,указанных в конфигурационном файле");
+            throw new InconsistencyWithConfigurationFileException("Данная страница находится за пределами сайтов,указанных в конфигурационном файле");
         }
         Site site = isPageBelongsToExistingListOfSites(path).get();
         stopFlag.set(false);
@@ -107,7 +103,7 @@ public class IndexServiceImpl implements IndexService {
                 pageRepository.save(pageEntity);
             }
             if (pageEntity.getCode() >= 400) {
-                throw new CrawlingOfPagesFailed("Не удается индексировать страницу");
+                throw new CrawlingOfPagesFailedException("Не удается индексировать страницу");
             }
             FillingDatabaseLemmaIndex fillingDatabaseLemmaIndex = new FillingDatabaseLemmaIndex(lemmaRepository, indexRepository);
             fillingDatabaseLemmaIndex.createLemmaAndIndex(pageEntity, currentSiteEntity);
@@ -115,7 +111,7 @@ public class IndexServiceImpl implements IndexService {
                 currentSiteEntity.setErrorText("");
                 currentSiteEntity.setIndexingStatus(IndexingStatus.INDEXED);
             } else {
-                throw new ForcedStopOfIndexing("Индексация остановлена пользователем");
+                throw new ForcedStopOfIndexingException("Индексация остановлена пользователем");
             }
         } catch (Exception e) {
             currentSiteEntity.setIndexingStatus(IndexingStatus.FAILED);
@@ -138,7 +134,7 @@ public class IndexServiceImpl implements IndexService {
     }
 
 
-    private void clearingDatabase(SiteEntity siteEntity) {
+    private void clearDatabase(SiteEntity siteEntity) {
 
         List<IndexEntity> indexEntityList = siteEntity.getPageEntities()
                 .stream()

@@ -1,12 +1,12 @@
 package searchengine.services;
 
-import lombok.RequiredArgsConstructor;
+
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+
 import searchengine.config.QueryParametersForIndexedSite;
 
 
@@ -36,12 +36,3 @@ public class ConnectingToLink {
 
 }
 
-
-//
-//    private QueryParametersForIndexedSite queryParameters = new QueryParametersForIndexedSite();
-//    @Value("${query-parameters.userAgent}")
-//    private String userAgent;
-//    @Value("${query-parameters.referrer}")
-//    private String referrer;
-//    @Value("${query-parameters.timeOut}")
-//    private int timeout;
